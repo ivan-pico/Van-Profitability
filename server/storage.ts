@@ -1,38 +1,42 @@
-import { type User, type InsertUser } from "@shared/schema";
-import { randomUUID } from "crypto";
-
-// modify the interface with any CRUD methods
-// you might need
+import { type Scenario, type InsertScenario, scenarios } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
-  getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  getScenarios(): Promise<Scenario[]>;
+  getScenario(id: number): Promise<Scenario | undefined>;
+  createScenario(scenario: InsertScenario): Promise<Scenario>;
+  updateScenario(id: number, scenario: Partial<InsertScenario>): Promise<Scenario | undefined>;
+  deleteScenario(id: number): Promise<void>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-
-  constructor() {
-    this.users = new Map();
+export class DatabaseStorage implements IStorage {
+  async getScenarios(): Promise<Scenario[]> {
+    return await db.select().from(scenarios);
   }
 
-  async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+  async getScenario(id: number): Promise<Scenario | undefined> {
+    const [scenario] = await db.select().from(scenarios).where(eq(scenarios.id, id));
+    return scenario;
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+  async createScenario(insertScenario: InsertScenario): Promise<Scenario> {
+    const [scenario] = await db.insert(scenarios).values(insertScenario).returning();
+    return scenario;
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
+  async updateScenario(id: number, update: Partial<InsertScenario>): Promise<Scenario | undefined> {
+    const [updated] = await db
+      .update(scenarios)
+      .set(update)
+      .where(eq(scenarios.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteScenario(id: number): Promise<void> {
+    await db.delete(scenarios).where(eq(scenarios.id, id));
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
