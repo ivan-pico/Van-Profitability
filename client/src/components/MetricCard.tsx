@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 
 interface MetricCardProps {
-  label: string;
+  label: React.ReactNode;
   value: string | number;
   subtext?: string;
   trend?: "up" | "down" | "neutral";
@@ -24,7 +24,7 @@ export function MetricCard({ label, value, subtext, trend, icon, className, dela
     >
       <div className="flex justify-between items-start">
         <div>
-          <p className="text-sm font-medium text-muted-foreground">{label}</p>
+          <div className="text-sm font-medium text-muted-foreground flex items-center">{label}</div>
           <h3 className="text-2xl font-bold mt-2 tracking-tight">{value}</h3>
           {subtext && (
             <p className={cn("text-xs mt-1 font-medium", {
