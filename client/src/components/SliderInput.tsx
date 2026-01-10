@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import React from "react";
 
 interface SliderInputProps {
-  label: string;
+  label: React.ReactNode;
   value: number;
   min: number;
   max: number;
@@ -40,7 +40,7 @@ export function SliderInput({
   return (
     <div className={cn("space-y-3", className)}>
       <div className="flex justify-between items-center">
-        <Label className="text-sm font-medium text-foreground/80">{label}</Label>
+        <Label className="text-sm font-medium text-foreground/80 flex items-center">{label}</Label>
         <div className="flex items-center gap-1 bg-background border rounded-md px-2 py-1 w-24 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
           <Input 
             type="number" 

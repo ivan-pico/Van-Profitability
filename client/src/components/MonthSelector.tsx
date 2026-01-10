@@ -4,17 +4,13 @@ import { motion } from "framer-motion";
 
 interface MonthSelectorProps {
   rentalDays: number[];
+  label: React.ReactNode;
   onChange: (newDays: number[]) => void;
 }
 
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-export function MonthSelector({ rentalDays, onChange }: MonthSelectorProps) {
-
-  const handleBarClick = (index: number, days: number) => {
-    // Simple toggle logic or increment logic could go here, 
-    // but a bar chart style interaction is better for visualization
-  };
+export function MonthSelector({ rentalDays, label, onChange }: MonthSelectorProps) {
 
   const updateMonth = (index: number, val: number) => {
     const newDays = [...rentalDays];
@@ -25,8 +21,8 @@ export function MonthSelector({ rentalDays, onChange }: MonthSelectorProps) {
   return (
     <div className="bg-card/50 rounded-xl p-4 border border-border/50">
       <div className="flex justify-between items-center mb-4">
-        <Label className="font-semibold text-foreground">Occupancy per Month (Days)</Label>
-        <span className="text-xs text-muted-foreground">Click/Drag to adjust</span>
+        <Label className="font-semibold text-foreground flex items-center">{label}</Label>
+        <span className="text-xs text-muted-foreground italic">Drag bars</span>
       </div>
       
       <div className="grid grid-cols-12 gap-2 h-32 items-end">
