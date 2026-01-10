@@ -487,25 +487,27 @@ export default function Dashboard() {
 
             {/* Charts Section */}
             <Card className="border-border/50 shadow-md overflow-hidden bg-card/80 backdrop-blur-sm">
-              <CardHeader>
+              <CardHeader className="pb-2">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <CardTitle>{t.financialProjection}</CardTitle>
-                  <Tabs defaultValue="monthly" className="w-full sm:w-[400px]">
-                    <TabsList className="grid w-full grid-cols-2">
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Tabs defaultValue="monthly" className="w-full">
+                  <div className="flex justify-end mb-4">
+                    <TabsList className="grid w-full sm:w-[400px] grid-cols-2">
                       <TabsTrigger value="monthly">{t.monthlyCashflow}</TabsTrigger>
                       <TabsTrigger value="cumulative">{t.cumulativeProfit}</TabsTrigger>
                     </TabsList>
-                  </Tabs>
-                </div>
-              </CardHeader>
-              <CardContent className="h-[400px] pt-0">
-                <Tabs defaultValue="monthly" className="h-full">
-                  <TabsContent value="monthly" className="h-full mt-0">
-                    <ProfitChart data={calculations.monthlyData} type="monthly" />
-                  </TabsContent>
-                  <TabsContent value="cumulative" className="h-full mt-0">
-                    <ProfitChart data={calculations.monthlyData} type="cumulative" />
-                  </TabsContent>
+                  </div>
+                  <div className="h-[400px]">
+                    <TabsContent value="monthly" className="h-full mt-0">
+                      <ProfitChart data={calculations.monthlyData} type="monthly" />
+                    </TabsContent>
+                    <TabsContent value="cumulative" className="h-full mt-0">
+                      <ProfitChart data={calculations.monthlyData} type="cumulative" />
+                    </TabsContent>
+                  </div>
                 </Tabs>
               </CardContent>
             </Card>
