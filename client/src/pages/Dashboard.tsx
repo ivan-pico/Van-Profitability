@@ -137,16 +137,14 @@ const DEFAULT_SCENARIO = {
 };
 
 const InfoIcon = ({ tooltip }: { tooltip: string }) => (
-  <TooltipProvider>
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help inline-block ml-1.5 opacity-60 hover:opacity-100" />
-      </TooltipTrigger>
-      <TooltipContent className="max-w-[200px] text-xs">
-        {tooltip}
-      </TooltipContent>
-    </Tooltip>
-  </TooltipProvider>
+  <Tooltip>
+    <TooltipTrigger asChild>
+      <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help inline-block ml-1.5 opacity-60 hover:opacity-100" />
+    </TooltipTrigger>
+    <TooltipContent className="max-w-[200px] text-xs z-[100]">
+      {tooltip}
+    </TooltipContent>
+  </Tooltip>
 );
 
 export default function Dashboard() {
