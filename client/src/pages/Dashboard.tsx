@@ -161,11 +161,32 @@ const InfoIcon = ({ tooltip }: { tooltip: string }) => (
 );
 
 export default function Dashboard() {
-  const [lang, setLang] = useState<"en" | "es">("en");
+  const [params, setParams] = useState(() => {
+    const saved = localStorage.getItem("camperroi_params");
+    return saved ? JSON.parse(saved) : DEFAULT_SCENARIO;
+  });
+  const [globalOccupancy, setGlobalOccupancy] = useState(() => {
+    const saved = localStorage.getItem("camperroi_global_occupancy");
+    return saved ? JSON.parse(saved) : 12;
+  });
+  const [lang, setLang] = useState<"en" | "es">(() => {
+    const saved = localStorage.getItem("camperroi_lang");
+    return (saved as "en" | "es") || "en";
+  });
   const t = translations[lang];
 
-  const [params, setParams] = useState(DEFAULT_SCENARIO);
-  const [globalOccupancy, setGlobalOccupancy] = useState(12);
+  useEffect(() => {
+    localStorage.setItem("camperroi_params", JSON.stringify(params));
+  }, [params]);
+
+  useEffect(() => {
+    localStorage.setItem("camperroi_global_occupancy", JSON.stringify(globalOccupancy));
+  }, [globalOccupancy]);
+
+  useEffect(() => {
+    localStorage.setItem("camperroi_lang", lang);
+  }, [lang]);
+
   const [scenarioName, setScenarioName] = useState("");
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
   
