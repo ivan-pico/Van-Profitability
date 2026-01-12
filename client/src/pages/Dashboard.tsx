@@ -346,21 +346,11 @@ export default function Dashboard() {
   };
 
   const handleGlobalOccupancyChange = (val: number) => {
-    const oldVal = globalOccupancy;
     setGlobalOccupancy(val);
-    
-    // Proportional adjustment
-    const ratio = oldVal === 0 ? 1 : val / oldVal;
-    setParams(prev => {
-      const newDays = prev.rentalDaysPerMonth.map(days => {
-        const adjusted = Math.round(days * ratio);
-        return Math.min(30, Math.max(0, adjusted));
-      });
-      return {
-        ...prev,
-        rentalDaysPerMonth: newDays
-      };
-    });
+    setParams(p => ({
+      ...p,
+      rentalDaysPerMonth: Array(12).fill(val)
+    }));
   };
 
   return (
