@@ -349,30 +349,13 @@ export default function Dashboard() {
     const oldVal = globalOccupancy;
     setGlobalOccupancy(val);
     
+    // Proportional adjustment
+    const ratio = oldVal === 0 ? 1 : val / oldVal;
     setParams(prev => {
-      // Calculate current average to handle the "all zeros" case or baseline for zeros
-      const currentTotal = prev.rentalDaysPerMonth.reduce((a, b) => a + b, 0);
-      const currentAvg = currentTotal / 12;
-      
       const newDays = prev.rentalDaysPerMonth.map(days => {
-        let adjusted;
-        if (oldVal === 0) {
-          // If we were at 0 global, move everyone to the new value
-          adjusted = val;
-        } else {
-          // Proportional adjustment
-          const ratio = val / oldVal;
-          if (days === 0 && val > oldVal) {
-            // If this specific month was 0 but we are increasing global occupancy,
-            // give it a value proportional to the new global setting
-            adjusted = Math.round(val);
-          } else {
-            adjusted = Math.round(days * ratio);
-          }
-        }
+        const adjusted = Math.round(days * ratio);
         return Math.min(30, Math.max(0, adjusted));
       });
-
       return {
         ...prev,
         rentalDaysPerMonth: newDays
