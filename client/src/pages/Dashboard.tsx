@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { useCreateScenario, useScenarios } from "@/hooks/use-scenarios";
+import { useCreateScenario, useScenarios, useDeleteScenario } from "@/hooks/use-scenarios";
 import { SliderInput } from "@/components/SliderInput";
 import { MonthSelector } from "@/components/MonthSelector";
 import { MetricCard } from "@/components/MetricCard";
@@ -13,6 +13,14 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Textarea } from "@/components/ui/textarea";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { 
   PiggyBank, 
   TrendingUp, 
@@ -25,7 +33,8 @@ import {
   Info,
   Globe,
   Plus,
-  Trash2
+  Trash2,
+  FolderOpen
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -36,6 +45,9 @@ const translations = {
     title: "CamperROI",
     reset: "Reset",
     saveScenario: "Save Scenario",
+    notes: "Notes",
+    loadScenario: "Load Scenario",
+    deleteScenario: "Delete Scenario",
     vehicleLoan: "Vehicle & Loan",
     vehiclePrice: "Vehicle Price",
     loanAmount: "Loan Amount",
@@ -87,6 +99,9 @@ const translations = {
     title: "CamperROI",
     reset: "Reiniciar",
     saveScenario: "Guardar Escenario",
+    notes: "Notas",
+    loadScenario: "Cargar Escenario",
+    deleteScenario: "Eliminar Escenario",
     vehicleLoan: "Vehículo y Préstamo",
     vehiclePrice: "Precio del Vehículo",
     loanAmount: "Importe del Préstamo",
@@ -188,9 +203,13 @@ export default function Dashboard() {
   }, [lang]);
 
   const [scenarioName, setScenarioName] = useState("");
+  const [scenarioNotes, setScenarioNotes] = useState("");
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
+  const [currentScenarioId, setCurrentScenarioId] = useState<number | null>(null);
   
+  const { data: scenarios = [] } = useScenarios();
   const { mutate: createScenario, isPending: isSaving } = useCreateScenario();
+  const { mutate: deleteScenario, isPending: isDeleting } = useDeleteScenario();
   
   // -- Calculations --
   const calculations = useMemo(() => {
@@ -278,14 +297,47 @@ export default function Dashboard() {
   const handleSave = () => {
     createScenario({
       name: scenarioName || `Scenario ${new Date().toLocaleString()}`,
+      notes: scenarioNotes,
       ...params,
       interestRate: params.interestRate.toString(), // Schema expects numeric string
     }, {
       onSuccess: () => {
         setIsSaveDialogOpen(false);
         setScenarioName("");
+        setScenarioNotes("");
       }
     });
+  };
+
+  const handleLoadScenario = (id: string) => {
+    const scenario = scenarios.find(s => s.id === parseInt(id));
+    if (scenario) {
+      setCurrentScenarioId(scenario.id);
+      setParams({
+        campervanPrice: scenario.campervanPrice,
+        loanAmount: scenario.loanAmount,
+        loanTerm: scenario.loanTerm,
+        interestRate: parseFloat(scenario.interestRate),
+        annualInsurance: scenario.annualInsurance,
+        monthlyMaintenance: scenario.monthlyMaintenance,
+        rentalPricePerDay: scenario.rentalPricePerDay,
+        rentalDaysPerMonth: scenario.rentalDaysPerMonth,
+        customCosts: scenario.customCosts as any,
+      });
+      setScenarioName(scenario.name);
+      setScenarioNotes(scenario.notes || "");
+    }
+  };
+
+  const handleDeleteScenario = () => {
+    if (currentScenarioId) {
+      deleteScenario(currentScenarioId, {
+        onSuccess: () => {
+          setCurrentScenarioId(null);
+          handleReset();
+        }
+      });
+    }
   };
 
   const handleReset = () => {
@@ -335,6 +387,21 @@ export default function Dashboard() {
             <Button variant="ghost" size="sm" onClick={handleReset} className="text-muted-foreground hover:text-foreground">
               <RotateCcw className="w-4 h-4 mr-2" /> {t.reset}
             </Button>
+            
+            {scenarios.length > 0 && (
+              <Select onValueChange={handleLoadScenario} value={currentScenarioId?.toString()}>
+                <SelectTrigger className="w-[180px] h-9">
+                  <FolderOpen className="w-4 h-4 mr-2" />
+                  <SelectValue placeholder={t.loadScenario} />
+                </SelectTrigger>
+                <SelectContent>
+                  {scenarios.map(s => (
+                    <SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+
             <Dialog open={isSaveDialogOpen} onOpenChange={setIsSaveDialogOpen}>
               <DialogTrigger asChild>
                 <Button size="sm" className="bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:shadow-primary/30">
@@ -345,17 +412,29 @@ export default function Dashboard() {
                 <DialogHeader>
                   <DialogTitle>{lang === "en" ? "Save Profitability Scenario" : "Guardar Escenario de Rentabilidad"}</DialogTitle>
                   <DialogDescription>
-                    {lang === "en" ? "Give your scenario a name to retrieve it later." : "Dale un nombre a tu escenario para recuperarlo más tarde."}
+                    {lang === "en" ? "Give your scenario a name and notes to retrieve it later." : "Dale un nombre y notas a tu escenario para recuperarlo más tarde."}
                   </DialogDescription>
                 </DialogHeader>
-                <div className="py-4">
-                  <Label htmlFor="name" className="mb-2 block">{lang === "en" ? "Scenario Name" : "Nombre del Escenario"}</Label>
-                  <Input 
-                    id="name" 
-                    placeholder="e.g. Summer Special 2025" 
-                    value={scenarioName}
-                    onChange={(e) => setScenarioName(e.target.value)}
-                  />
+                <div className="py-4 space-y-4">
+                  <div>
+                    <Label htmlFor="name" className="mb-2 block">{lang === "en" ? "Scenario Name" : "Nombre del Escenario"}</Label>
+                    <Input 
+                      id="name" 
+                      placeholder="e.g. Summer Special 2025" 
+                      value={scenarioName}
+                      onChange={(e) => setScenarioName(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="notes" className="mb-2 block">{t.notes}</Label>
+                    <Textarea 
+                      id="notes" 
+                      placeholder={lang === "en" ? "Extra details about this scenario..." : "Detalles extra sobre este escenario..."}
+                      value={scenarioNotes}
+                      onChange={(e) => setScenarioNotes(e.target.value)}
+                      className="resize-none h-24"
+                    />
+                  </div>
                 </div>
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setIsSaveDialogOpen(false)}>{lang === "en" ? "Cancel" : "Cancelar"}</Button>
@@ -365,6 +444,18 @@ export default function Dashboard() {
                 </DialogFooter>
               </DialogContent>
             </Dialog>
+
+            {currentScenarioId && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleDeleteScenario}
+                disabled={isDeleting}
+                className="text-destructive border-destructive/20 hover:bg-destructive/10"
+              >
+                <Trash2 className="w-4 h-4 mr-2" /> {t.deleteScenario}
+              </Button>
+            )}
           </div>
         </div>
       </header>

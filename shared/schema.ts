@@ -14,6 +14,7 @@ export const scenarios = pgTable("scenarios", {
   rentalPricePerDay: integer("rental_price_per_day").notNull(),
   rentalDaysPerMonth: jsonb("rental_days_per_month").$type<number[]>().notNull(), // Array of 12 numbers
   customCosts: jsonb("custom_costs").$type<{name: string, value: number, period: 'monthly' | 'annual'}[]>().default([]).notNull(),
+  notes: text("notes"),
 });
 
 export const insertScenarioSchema = createInsertSchema(scenarios).omit({ id: true });
