@@ -351,9 +351,17 @@ export default function Dashboard() {
     
     // Proportional adjustment
     const ratio = oldVal === 0 ? 1 : val / oldVal;
+    const diff = val - oldVal;
+
     setParams(prev => {
       const newDays = prev.rentalDaysPerMonth.map(days => {
-        const adjusted = Math.round(days * ratio);
+        let adjusted;
+        if (days === 0 && diff > 0) {
+          // If it was 0 and we are increasing, give it a baseline based on the change
+          adjusted = Math.max(1, Math.round(diff));
+        } else {
+          adjusted = Math.round(days * ratio);
+        }
         return Math.min(30, Math.max(0, adjusted));
       });
       return {
