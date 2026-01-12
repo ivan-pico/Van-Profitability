@@ -45,7 +45,16 @@ export function SliderInput({
         : (label as any).props.children)
     : "";
 
-  const isTerm = typeof label === 'string' ? label.toLowerCase().includes('term') || label.toLowerCase().includes('plazo') : false;
+  const isTerm = label && (
+    (typeof label === 'string' && (label.toLowerCase().includes('term') || label.toLowerCase().includes('plazo'))) ||
+    (React.isValidElement(label) && (
+      (label.props as any).children?.toString().toLowerCase().includes('term') || 
+      (label.props as any).children?.toString().toLowerCase().includes('plazo') ||
+      (Array.isArray((label.props as any).children) && (label.props as any).children.some((child: any) => 
+        typeof child === 'string' && (child.toLowerCase().includes('term') || child.toLowerCase().includes('plazo'))
+      ))
+    ))
+  );
 
   return (
     <div className={cn("space-y-3", className)}>
