@@ -594,10 +594,10 @@ export default function Dashboard() {
                   </div>
                   <div className="h-[400px]">
                     <TabsContent value="monthly" className="h-full mt-0">
-                      <ProfitChart data={calculations.monthlyData} type="monthly" />
+                      <ProfitChart data={calculations.monthlyData} type="monthly" lang={lang} />
                     </TabsContent>
                     <TabsContent value="cumulative" className="h-full mt-0">
-                      <ProfitChart data={calculations.monthlyData} type="cumulative" />
+                      <ProfitChart data={calculations.monthlyData} type="cumulative" lang={lang} />
                     </TabsContent>
                   </div>
                 </Tabs>

@@ -26,9 +26,25 @@ interface ChartData {
 interface ProfitChartProps {
   data: ChartData[];
   type: 'monthly' | 'cumulative';
+  lang?: 'en' | 'es';
 }
 
-export function ProfitChart({ data, type }: ProfitChartProps) {
+export function ProfitChart({ data, type, lang = 'en' }: ProfitChartProps) {
+  const labels = {
+    en: {
+      income: "Income",
+      expenses: "Expenses",
+      profit: "Net Profit",
+      cumulative: "Cumulative Profit"
+    },
+    es: {
+      income: "Ingresos",
+      expenses: "Gastos",
+      profit: "Beneficio Neto",
+      cumulative: "Beneficio Acumulado"
+    }
+  }[lang];
+
   if (type === 'monthly') {
     return (
       <ResponsiveContainer width="100%" height="100%">
@@ -69,12 +85,12 @@ export function ProfitChart({ data, type }: ProfitChartProps) {
             labelStyle={{ color: 'hsl(var(--foreground))', fontWeight: 'bold' }}
           />
           <Legend />
-          <Bar dataKey="income" name="Income" fill="#10b981" radius={[4, 4, 0, 0]} barSize={20} />
-          <Bar dataKey="expenses" name="Expenses" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={20} />
+          <Bar dataKey="income" name={labels.income} fill="#10b981" radius={[4, 4, 0, 0]} barSize={20} />
+          <Bar dataKey="expenses" name={labels.expenses} fill="#ef4444" radius={[4, 4, 0, 0]} barSize={20} />
           <Line 
             type="monotone" 
             dataKey="profit" 
-            name="Net Profit" 
+            name={labels.profit} 
             stroke="hsl(var(--primary))" 
             strokeWidth={3} 
             dot={false}
@@ -115,7 +131,7 @@ export function ProfitChart({ data, type }: ProfitChartProps) {
             borderRadius: '8px',
             boxShadow: 'var(--shadow-lg)'
           }}
-          formatter={(value: number) => [formatCurrency(value), 'Cumulative Profit']}
+          formatter={(value: number) => [formatCurrency(value), labels.cumulative]}
         />
         <Area 
           type="monotone" 

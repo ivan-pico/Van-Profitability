@@ -37,18 +37,35 @@ export function SliderInput({
     }
   };
 
+  const years = Math.floor(value / 12);
+  const months = value % 12;
+  const timeLabel = label && typeof label === 'object' && 'props' in label && (label as any).props.children 
+    ? (Array.isArray((label as any).props.children) 
+        ? (label as any).props.children.find((c: any) => typeof c === 'string') 
+        : (label as any).props.children)
+    : "";
+
+  const isTerm = typeof label === 'string' ? label.toLowerCase().includes('term') || label.toLowerCase().includes('plazo') : false;
+
   return (
     <div className={cn("space-y-3", className)}>
       <div className="flex justify-between items-center">
         <Label className="text-sm font-medium text-foreground/80 flex items-center">{label}</Label>
-        <div className="flex items-center gap-1 bg-background border rounded-md px-2 py-1 w-24 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
-          <Input 
-            type="number" 
-            value={value} 
-            onChange={handleInputChange}
-            className="h-6 p-0 border-0 shadow-none focus-visible:ring-0 text-right font-mono text-sm"
-          />
-          {unit && <span className="text-xs text-muted-foreground select-none">{unit}</span>}
+        <div className="flex flex-col items-end gap-1">
+          <div className="flex items-center gap-1 bg-background border rounded-md px-2 py-1 w-24 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+            <Input 
+              type="number" 
+              value={value} 
+              onChange={handleInputChange}
+              className="h-6 p-0 border-0 shadow-none focus-visible:ring-0 text-right font-mono text-sm"
+            />
+            {unit && <span className="text-xs text-muted-foreground select-none">{unit}</span>}
+          </div>
+          {isTerm && (
+            <span className="text-[10px] text-muted-foreground italic">
+              {years > 0 ? `${years}y ` : ""}{months}m
+            </span>
+          )}
         </div>
       </div>
       <Slider
