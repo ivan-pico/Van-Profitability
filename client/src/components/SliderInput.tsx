@@ -70,9 +70,9 @@ export function SliderInput({
           {unit && <span className="text-xs text-muted-foreground select-none">{unit}</span>}
         </div>
       </div>
-      <div className="relative">
+      <div className="space-y-1.5">
         {isTerm && (
-          <div className="absolute -top-4 right-0">
+          <div className="flex justify-end pr-0.5">
             <span className="text-[10px] text-muted-foreground font-medium italic">
               {years > 0 ? `${years}y ` : ""}{months}m
             </span>
