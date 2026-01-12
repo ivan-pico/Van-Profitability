@@ -13,6 +13,7 @@ export const scenarios = pgTable("scenarios", {
   monthlyMaintenance: integer("monthly_maintenance").notNull(),
   rentalPricePerDay: integer("rental_price_per_day").notNull(),
   rentalDaysPerMonth: jsonb("rental_days_per_month").$type<number[]>().notNull(), // Array of 12 numbers
+  customCosts: jsonb("custom_costs").$type<{name: string, value: number, period: 'monthly' | 'annual'}[]>().default([]).notNull(),
 });
 
 export const insertScenarioSchema = createInsertSchema(scenarios).omit({ id: true });

@@ -23,7 +23,9 @@ import {
   Truck,
   Wallet,
   Info,
-  Globe
+  Globe,
+  Plus,
+  Trash2
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -50,6 +52,11 @@ const translations = {
     monthlyExpense: "Monthly Expense",
     totalRoi: "Total ROI",
     paybackPeriod: "Payback Period",
+    customCostName: "Cost Name",
+    customCostValue: "Value",
+    addCost: "Add Cost",
+    periodMonthly: "Monthly",
+    periodAnnual: "Annual",
     financialProjection: "Financial Projection",
     monthlyCashflow: "Monthly Cashflow",
     cumulativeProfit: "Cumulative Profit",
@@ -96,6 +103,11 @@ const translations = {
     monthlyExpense: "Gasto Mensual",
     totalRoi: "ROI Total",
     paybackPeriod: "Periodo de Recuperación",
+    customCostName: "Nombre del Gasto",
+    customCostValue: "Valor",
+    addCost: "Añadir Gasto",
+    periodMonthly: "Mensual",
+    periodAnnual: "Anual",
     financialProjection: "Proyección Financiera",
     monthlyCashflow: "Flujo de Caja Mensual",
     cumulativeProfit: "Beneficio Acumulado",
@@ -117,9 +129,9 @@ const translations = {
       rentalPrice: "La tarifa diaria que cobras a tus clientes por alquilar la furgoneta.",
       globalOccupancy: "Establece el mismo número de días de alquiler para todos los meses del año.",
       totalProfit: "Las ganancias netas totales después de todos los gastos y pagos del préstamo.",
-      monthlyExpense: "Costes fisjos mensuales totales (Préstamo + Seguro + Mantenimiento).",
+      monthlyExpense: "Costes fisjos mensuales totales (Préstamo + Seguro + Mantenimiento + Gastos Personalizados).",
       roi: "Retorno de la Inversión: Beneficio total dividido por el precio del vehículo.",
-      payback: "Tiempo estimado necesario para recuperar la inversión inicial."
+      payback: "Tiempo en que empiezas a obtener beneficios reales (cuando el acumulado supera la inversión inicial y los costes financieros)."
     }
   }
 };
@@ -134,6 +146,7 @@ const DEFAULT_SCENARIO = {
   monthlyMaintenance: 60,
   rentalPricePerDay: 120,
   rentalDaysPerMonth: Array(12).fill(12),
+  customCosts: [] as {name: string, value: number, period: 'monthly' | 'annual'}[],
 };
 
 const InfoIcon = ({ tooltip }: { tooltip: string }) => (
@@ -173,12 +186,23 @@ export default function Dashboard() {
     }
 
     const monthlyInsurance = params.annualInsurance / 12;
-    const monthlyFixedExpense = monthlyLoanPayment + monthlyInsurance + params.monthlyMaintenance;
+    
+    // Calculate total custom monthly costs
+    const customMonthlyTotal = params.customCosts.reduce((acc, cost) => {
+      return acc + (cost.period === 'monthly' ? cost.value : cost.value / 12);
+    }, 0);
+
+    const monthlyFixedExpense = monthlyLoanPayment + monthlyInsurance + params.monthlyMaintenance + customMonthlyTotal;
 
     let cumulativeProfit = 0;
     const monthlyData = [];
     let totalRevenue = 0;
     let totalExpenses = 0;
+
+    // Total Financial Costs (Investment + Interests)
+    const initialInvestment = params.campervanPrice - params.loanAmount;
+    const totalInterests = (monthlyLoanPayment * params.loanTerm) - params.loanAmount;
+    const totalBreakEvenTarget = initialInvestment + totalInterests;
 
     // We simulate for the full loan term duration
     // Loop through months 1 to loanTerm
@@ -212,8 +236,7 @@ export default function Dashboard() {
     const totalProfit = totalRevenue - totalExpenses;
     const roi = (totalProfit / params.campervanPrice) * 100;
     
-    // Payback period
-    const initialInvestment = params.campervanPrice - params.loanAmount;
+    // Payback period (Benefits > Initial Investment + Financial Costs)
     const paybackMonthIndex = monthlyData.findIndex(m => m.cumulativeProfit >= initialInvestment);
     const paybackPeriod = paybackMonthIndex >= 0 
       ? `${((paybackMonthIndex + 1) / 12).toFixed(1)} ${lang === "en" ? "Years" : "Años"}` 
@@ -406,6 +429,75 @@ export default function Dashboard() {
                   step={10}
                   onChange={(val) => setParams(p => ({ ...p, monthlyMaintenance: val }))}
                 />
+                
+                <Separator />
+                
+                <div className="space-y-4">
+                  {params.customCosts.map((cost, idx) => (
+                    <div key={idx} className="flex items-end gap-2 p-3 bg-muted/30 rounded-lg border">
+                      <div className="flex-1 space-y-1">
+                        <Label className="text-[10px] uppercase text-muted-foreground">{t.customCostName}</Label>
+                        <Input 
+                          value={cost.name} 
+                          className="h-8 text-sm"
+                          onChange={(e) => {
+                            const newCosts = [...params.customCosts];
+                            newCosts[idx].name = e.target.value;
+                            setParams(p => ({ ...p, customCosts: newCosts }));
+                          }}
+                        />
+                      </div>
+                      <div className="w-24 space-y-1">
+                        <Label className="text-[10px] uppercase text-muted-foreground">{t.customCostValue}</Label>
+                        <Input 
+                          type="number"
+                          value={cost.value} 
+                          className="h-8 text-sm"
+                          onChange={(e) => {
+                            const newCosts = [...params.customCosts];
+                            newCosts[idx].value = Number(e.target.value);
+                            setParams(p => ({ ...p, customCosts: newCosts }));
+                          }}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-4 w-full text-[10px] h-auto p-0 hover:bg-transparent"
+                          onClick={() => {
+                            const newCosts = [...params.customCosts];
+                            newCosts[idx].period = newCosts[idx].period === 'monthly' ? 'annual' : 'monthly';
+                            setParams(p => ({ ...p, customCosts: newCosts }));
+                          }}
+                        >
+                          {cost.period === 'monthly' ? t.periodMonthly : t.periodAnnual}
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 text-destructive"
+                          onClick={() => {
+                            setParams(p => ({ ...p, customCosts: p.customCosts.filter((_, i) => i !== idx) }));
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                  <Button 
+                    variant="outline" 
+                    className="w-full border-dashed" 
+                    onClick={() => setParams(p => ({ 
+                      ...p, 
+                      customCosts: [...p.customCosts, { name: '', value: 0, period: 'monthly' }] 
+                    }))}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    {t.addCost}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
 
